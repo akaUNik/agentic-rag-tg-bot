@@ -18,7 +18,7 @@
 2. (Опционально) Установите Docker, если хотите деплоить проект в контейнере.
 3. Клонируйте репозиторорий с проектом:
 
-    git clone git@github.com:akaUNik/agentic-rag-tg-bot.git
+    git clone git@github.com:akaUNik/agentic-rag-tg-bot.git  
     cd agentic-rag-tg-bot.git
 
 4. Убедитесь, что у вас есть файл `.env` (см. раздел «Переменные окружения»), либо создайте его вручную.
