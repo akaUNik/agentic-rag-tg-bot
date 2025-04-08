@@ -1,6 +1,6 @@
 # Agentic RAG TG-Bot
 
-Этот проект демонстрирует использование Retrieval-Augmented Generation (RAG) для телеграм-бота. Бот ищет и анализирует содержимое загруженных документов (PDF-файлы, расшифровки YouTube) и формирует ответ, используя модели OpenAI.
+Этот проект демонстрирует использование Retrieval-Augmented Generation (RAG) для телеграм-бота. Бот ищет и анализирует содержимое загруженных документов (PDF-файлы, расшифровки YouTube) и формирует ответ, используя LLM.
 
 ---
 
@@ -18,10 +18,8 @@
 2. (Опционально) Установите Docker, если хотите деплоить проект в контейнере.
 3. Клонируйте репозиторорий с проектом:
 
-    ```bash
     git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ>
     cd <ПАПКА_РЕПОЗИТОРИЯ>
-    ```
 
 4. Убедитесь, что у вас есть файл `.env` (см. раздел «Переменные окружения»), либо создайте его вручную.
 
@@ -31,13 +29,11 @@
 
 Файл `.env` может выглядеть так (пример):
 
-    ```bash
     OPENAI_API_KEY=***
     LANGCHAIN_TRACING_V2=true
     LANGCHAIN_API_KEY=****
     LANGCHAIN_PROJECT=agentic-rag-tg-bot
     BOT_TOKEN=***
-    ```
 
 **Все** эти переменные (особенно токены и ключи API) не должны попадать в публичные репозитории. Не забудьте добавить `.env` в `.gitignore`.
 
@@ -47,18 +43,7 @@
 
 Если планируете запускать проект локально (не через Docker):
 
-    ```bash
     pip install -r requirements.txt
-    ```
-
-В вашем файле `requirements.txt` должны быть перечислены все необходимые библиотеки, например:
-- langchain
-- langgraph
-- openai
-- python-telegram-bot
-- youtube-transcript-api
-- chromadb
-- и т.д.
 
 ---
 
@@ -66,15 +51,11 @@
 
 Пример команды для загрузки PDF-файла:
 
-    ```bash
     python ingest.py pdf/Sber2023.pdf
-    ```
 
 Пример команды для загрузки расшифровки YouTube:
 
-    ```bash
     python ingest.py "https://www.youtube.com/watch?v=rJLI3J1W_SY"
-    ```
 
 Файлы/транскрипты будут разбиваться на фрагменты и сохраняться в локальную базу Chroma (по умолчанию в папке `./chromadb`).
 
@@ -84,27 +65,13 @@
 
 Убедитесь, что ваш `.env` корректен и всё установлено:
 
-    ```bash
     python bot.py
-    ```
 
 Бот запустится и начнёт слушать входящие сообщения в Telegram по указанному `BOT_TOKEN`.
 
 ---
 
 ## 7. Запуск через Docker
-
-### 7.1. Пример Dockerfile
-
-    ```dockerfile
-    FROM python:3.9-slim
-    WORKDIR /app
-    COPY . /app
-    RUN pip install --no-cache-dir -r requirements.txt
-    CMD ["python", "bot.py"]
-    ```
-
-### 7.2. Скрипт деплоя
 
 В репозитории есть файл `deploy.sh`, который:
 1. Останавливает и удаляет текущий контейнер (если он запущен).
@@ -115,10 +82,8 @@
 
 **Использование**:
 
-    ```bash
     chmod +x deploy.sh
     ./deploy.sh
-    ```
 
 ---
 
@@ -139,5 +104,5 @@
 
 ## 10. Контакты
 
-- **Разработчик/автор**: укажите имя/контакты или создавайте Issues в репозитории
-- **Issues/вопросы**: GitHub/GitLab-репозиторий проекта (если доступно)
+- **Разработчик**: Дмитрий Бурдаков
+- **Issues**: [https://github.com/akaUNik/agentic-rag-tg-bot](https://github.com/akaUNik/agentic-rag-tg-bot)
