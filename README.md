@@ -19,7 +19,7 @@
 3. Клонируйте репозиторорий с проектом:
 
     git clone git@github.com:akaUNik/agentic-rag-tg-bot.git  
-    cd agentic-rag-tg-bot.git
+    cd agentic-rag-tg-bot
 
 4. Убедитесь, что у вас есть файл `.env` (см. раздел «Переменные окружения»), либо создайте его вручную.
 

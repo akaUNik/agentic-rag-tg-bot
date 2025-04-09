@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 from dotenv import load_dotenv
 from textwrap import dedent  # Updated to directly import dedent
@@ -26,6 +27,13 @@ load_dotenv()
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain.tools.retriever import create_retriever_tool
+
+# https://docs.trychroma.com/updates/troubleshooting#sqlite
+try:
+    __import__('pysqlite3')
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    logger.warning("pysqlite3 not installed. Development envierement.")
 
 logger.info("Initializing Chroma vectorstore from './chromadb'...")
 

@@ -8,6 +8,8 @@ COPY requirements.txt ./
 
 # Install any needed packages specified in requirements.txt
 RUN pip install pip --upgrade
+# https://docs.trychroma.com/updates/troubleshooting#sqlite
+RUN pip install pysqlite3-binary
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the bot's code to the working directory
