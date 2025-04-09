@@ -1,30 +1,41 @@
-# ingest.py
+"""
+This script ingests data from PDF files or YouTube transcripts, processes it into chunks,
+and stores it in a Chroma database for retrieval-augmented generation (RAG) tasks.
 
-import os
+Usage:
+    python ingest.py <PDF_FILE_OR_YOUTUBE_URL> [PERSIST_DIRECTORY]
+"""
+
 import sys
 from dotenv import load_dotenv
 
 # PDF loader
 from langchain_community.document_loaders import PyPDFLoader
 
-# For text splitting
+# Langchain imports
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.docstore.document import Document
 
 # Chroma + embeddings
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 
-# Data structure for docs
-from langchain.docstore.document import Document
-
 # For YouTube transcripts
-# pip install youtube-transcript-api
 from youtube_transcript_api import YouTubeTranscriptApi
 
 ###############################################################################
 # 1. Helper to detect & parse YouTube
 ###############################################################################
 def is_youtube_link(url: str) -> bool:
+    """
+    Checks if the given URL is a YouTube link.
+
+    Args:
+        url (str): The URL to check.
+
+    Returns:
+        bool: True if the URL is a YouTube link, False otherwise.
+    """
     return "youtube.com" in url.lower() or "youtu.be" in url.lower()
 
 def extract_video_id(url: str) -> str:
@@ -49,7 +60,7 @@ def load_youtube_transcript(url: str) -> list[Document]:
     try:
         transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=["en", "ru"])
     except Exception as e:
-        raise ValueError(f"Failed to get YouTube transcript: {e}")
+        raise ValueError(f"Failed to get YouTube transcript: {e}") from e
 
     # Combine all text segments
     transcript_text = " ".join(segment["text"] for segment in transcript_data)
@@ -59,7 +70,7 @@ def load_youtube_transcript(url: str) -> list[Document]:
 ###############################################################################
 # 2. Ingest Function
 ###############################################################################
-def main(input_arg: str, persist_directory: str = "./chromadb"):
+def main(input_path: str, persist_directory: str = "./chromadb"):
     """
     Loads a PDF or a YouTube transcript, splits it into chunks,
     and appends them to a local Chroma DB (creates if it doesn't exist).
@@ -68,15 +79,15 @@ def main(input_arg: str, persist_directory: str = "./chromadb"):
     load_dotenv()  # So we get OPENAI_API_KEY, etc.
 
     # 1) Load documents depending on input type
-    if input_arg.lower().endswith(".pdf"):
+    if input_path.lower().endswith(".pdf"):
         # It's a PDF file
-        loader = PyPDFLoader(input_arg)
+        loader = PyPDFLoader(input_path)
         docs = loader.load()
-        print(f"Loaded {len(docs)} pages from PDF: {input_arg}")
-    elif is_youtube_link(input_arg):
+        print(f"Loaded {len(docs)} pages from PDF: {input_path}")
+    elif is_youtube_link(input_path):
         # It's a YouTube link
-        docs = load_youtube_transcript(input_arg)
-        print(f"Loaded transcript from YouTube video: {input_arg}")
+        docs = load_youtube_transcript(input_path)
+        print(f"Loaded transcript from YouTube video: {input_path}")
     else:
         raise ValueError("Input must be a path to a .pdf or a YouTube link.")
 
