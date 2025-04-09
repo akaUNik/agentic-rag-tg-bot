@@ -7,7 +7,6 @@ to process user queries and generate responses.
 
 import logging
 import os
-import sys
 from textwrap import dedent  # Updated to directly import dedent
 from typing import Annotated, Literal, Sequence
 from typing_extensions import TypedDict
@@ -45,14 +44,6 @@ load_dotenv()
 ###############################################################################
 # 3. SET UP CHROMA + RETRIEVER + TOOLS
 ###############################################################################
-
-# https://docs.trychroma.com/updates/troubleshooting#sqlite
-try:
-    __import__('pysqlite3')
-    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-except ImportError:
-    logger.warning("pysqlite3 not installed. Development envierement.")
-
 logger.info("Initializing Chroma vectorstore from './chromadb'...")
 
 vectorstore = Chroma(

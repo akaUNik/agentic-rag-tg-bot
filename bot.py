@@ -13,6 +13,7 @@ Usage:
 """
 
 import os
+import sys
 import logging
 from dotenv import load_dotenv
 
@@ -28,6 +29,14 @@ from telegram.ext import (
 from langgraph.errors import GraphRecursionError
 
 # Import the RAG pipeline function
+# https://docs.trychroma.com/updates/troubleshooting#sqlite
+try:
+    __import__('pysqlite3')
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    # logger.warning("pysqlite3 not installed. Development envierement.")
+    pass
+
 from agent import run_rag_agent
 
 ###############################################################################
