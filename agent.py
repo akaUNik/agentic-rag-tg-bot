@@ -1,8 +1,29 @@
+"""
+This module implements a Retrieval-Augmented Generation (RAG) pipeline using
+LangChain and Chroma for document retrieval and OpenAI's GPT models for
+question answering. It defines the agent's workflow, tools, and nodes
+to process user queries and generate responses.
+"""
+
+import logging
 import os
 import sys
-import logging
-from dotenv import load_dotenv
 from textwrap import dedent  # Updated to directly import dedent
+from typing import Annotated, Literal, Sequence
+from typing_extensions import TypedDict
+from dotenv import load_dotenv
+
+from langchain import hub
+from langchain.tools.retriever import create_retriever_tool
+from langchain_chroma import Chroma
+from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode, tools_condition
+from pydantic import BaseModel, Field
 
 ###############################################################################
 # 1. LOGGING SETUP: everything logs to rag_debug.log
@@ -24,9 +45,6 @@ load_dotenv()
 ###############################################################################
 # 3. SET UP CHROMA + RETRIEVER + TOOLS
 ###############################################################################
-from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
-from langchain.tools.retriever import create_retriever_tool
 
 # https://docs.trychroma.com/updates/troubleshooting#sqlite
 try:
@@ -56,21 +74,20 @@ logger.info("Retriever tool created.")
 ###############################################################################
 # 4. DEFINE THE AGENT STATE + NODES
 ###############################################################################
-from typing_extensions import TypedDict
-from typing import Annotated, Sequence, Literal
-from langchain_core.messages import BaseMessage
-from langgraph.graph.message import add_messages
 
 class AgentState(TypedDict):
+    """
+    A TypedDict representing the state of an agent.
+
+    Attributes:
+        messages (Sequence[BaseMessage]): A sequence of messages associated with the agent. 
+            This field is appended using the `add_messages` function.
+    """
     # The 'messages' field is appended via add_messages
     messages: Annotated[Sequence[BaseMessage], add_messages]
 
 
 # --- Node 1: grade_documents ---
-from pydantic import BaseModel, Field
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import PromptTemplate
-
 def grade_documents(state) -> Literal["generate", "rewrite"]:
     """
     Determines the relevance of retrieved documents to the user's question.
@@ -85,6 +102,10 @@ def grade_documents(state) -> Literal["generate", "rewrite"]:
     logger.debug("grade_documents: Checking retrieved docs relevance.")
 
     class Grade(BaseModel):
+        """
+        Represents the grading result for document relevance.
+        The 'binary_score' field indicates whether the document is relevant ('yes') or not ('no').
+        """
         binary_score: str = Field(description="Either 'yes' or 'no'")
 
     # LLM
@@ -136,8 +157,6 @@ def agent_node(state):
         dict: Updated state with new messages or tool outputs.
     """
     logger.debug("agent_node: Deciding next step or using a tool.")
-    from langchain_core.messages import BaseMessage
-    from langchain_openai import ChatOpenAI
 
     messages = state["messages"]
 
@@ -150,8 +169,6 @@ def agent_node(state):
 
 
 # --- Node 3: rewrite ---
-from langchain_core.messages import HumanMessage
-
 def rewrite(state):
     """
     Rewrites the user's question for better retrieval if documents are irrelevant.
@@ -183,9 +200,6 @@ def rewrite(state):
 
 
 # --- Node 4: generate ---
-from langchain_core.output_parsers import StrOutputParser
-from langchain import hub
-
 def generate(state):
     """
     Generates the final answer using retrieved documents and the user's question.
@@ -213,8 +227,6 @@ def generate(state):
 ###############################################################################
 # 5. BUILD THE GRAPH
 ###############################################################################
-from langgraph.graph import END, StateGraph, START
-from langgraph.prebuilt import tools_condition, ToolNode
 
 logger.debug("Building state graph for RAG pipeline...")
 
@@ -273,7 +285,7 @@ def run_rag_agent(question: str) -> str:
 
     # Extract the final text from the last node
     answer_text = None
-    for node_name, node_data in final_output.items():
+    for _, node_data in final_output.items():
         if isinstance(node_data, dict) and "messages" in node_data:
             msgs = node_data["messages"]
             if msgs:

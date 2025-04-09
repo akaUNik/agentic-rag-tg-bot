@@ -1,3 +1,17 @@
+"""
+Telegram Bot for answering user queries using a Retrieval-Augmented Generation (RAG) pipeline.
+
+This bot leverages the RAG pipeline to process user messages and generate responses.
+It supports handling the /start command and text messages, with error handling for
+specific cases like graph recursion limits. The bot uses the Telegram Bot API and
+requires a valid BOT_TOKEN to function.
+
+Usage:
+1. Set up the BOT_TOKEN in a .env file.
+2. Run the script to start the bot.
+3. Interact with the bot via Telegram.
+"""
+
 import os
 import logging
 from dotenv import load_dotenv
@@ -73,17 +87,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         answer = run_rag_agent(user_text)
         logger.info("Returning answer to user_id=%s: %s", user_id, answer)
         await update.message.reply_text(answer or "No answer produced.")
-    
     except GraphRecursionError as e:
         # Catch the recursion limit error
         logger.exception(
             "Graph recursion limit reached for user_id=%s. Error: %s", user_id, str(e)
         )
-        await update.message.reply_text("Your question is too complex. Please refine or simplify it.")
-    
+        await update.message.reply_text(
+            "Your question is too complex. Please refine or simplify it."
+        )
+    except ValueError as e:
+        logger.exception("ValueError encountered for user_id=%s: %s", user_id, e)
+        await update.message.reply_text("Invalid input. Please check your message and try again.")
+    except RuntimeError as e:
+        logger.exception("RuntimeError encountered for user_id=%s: %s", user_id, e)
+        await update.message.reply_text("A runtime error occurred. Please try again later.")
     except Exception as e:
-        logger.exception("Error processing user_id=%s message: %s", user_id, e)
-        await update.message.reply_text("An error occurred. Please try again later.")
+        logger.exception("Unexpected error processing user_id=%s message: %s", user_id, e)
+        await update.message.reply_text("An unexpected error occurred. Please try again later.")
 
 ##############################################################################
 # 4. Main Bot Entry
